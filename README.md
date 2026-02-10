@@ -11,3 +11,8 @@ Tento projekt je webová aplikácia postavená na frameworku **Flask** s využit
 1. Nainštalujte knižnice: `pip install -r requirements.txt`
 2. Importujte databázu pomocou `database_schema.sql`.
 3. Spustite aplikáciu príkazom `python app.py`.
+
+### Testovacie údaje:
+Učiteľ: meno: viera.24, heslo: heslo123
+
+Študent: meno: peter.baláž25, heslo: stud123
