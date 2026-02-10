@@ -6,7 +6,7 @@ def get_connection():
         host="localhost",
         database="edupage", # Názov tvojej DB v pgAdmine
         user="postgres",
-        password="2fip3dqbwc",
+        password="trust",
         port="5432"
     )
 
