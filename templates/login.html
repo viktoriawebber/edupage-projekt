@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <title>EduPage Login</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #eef2f7; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .login-box { background: white; padding: 40px; border-radius: 12px; shadow: 0 10px 25px rgba(0,0,0,0.1); width: 350px; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }
+        button { width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h2>EduPage Prihlásenie</h2>
+        <form action="/login" method="post">
+            <input type="text" name="username" placeholder="Používateľské meno" required>
+            <input type="password" name="password" placeholder="Heslo" required>
+            <button type="submit">Vstúpiť do systému</button>
+        </form>
+    </div>
+</body>
+</html>

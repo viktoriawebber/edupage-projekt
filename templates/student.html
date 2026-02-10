@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <title>EduPage - Portál Študenta</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 20px; color: #333; }
+        .container { max-width: 1100px; margin: auto; }
+
+        .header {
+            background: #2c3e50; color: white; padding: 20px; border-radius: 10px;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;
+        }
+        .logout-btn { background: #e74c3c; color: white; padding: 8px 15px; border-radius: 5px; text-decoration: none; }
+
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+
+        /* Tabuľky */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #3498db; color: white; padding: 12px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
+
+        /* Rozvrh */
+        .schedule-grid { display: grid; grid-template-columns: 50px repeat(5, 1fr); gap: 10px; text-align: center; }
+        .day-header { font-weight: bold; background: #ecf0f1; padding: 10px; border-radius: 5px; }
+        .lesson-box {
+            background: #e1f5fe; border: 1px solid #b3e5fc; padding: 10px; border-radius: 5px; font-size: 0.85em;
+            min-height: 60px; display: flex; flex-direction: column; justify-content: center;
+        }
+        .lesson-box strong { color: #0277bd; }
+        .teacher-info { font-size: 0.8em; color: #666; font-style: italic; }
+
+        .grade-badge {
+            background: #27ae60; color: white; padding: 5px 10px; border-radius: 50%;
+            font-weight: bold; display: inline-block; width: 20px; text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div>
+            <h1>Ahoj, {{ user }}! 👋</h1>
+            <p>Trieda: <strong>{{ class_name }}</strong> | Portál študenta</p>
+        </div>
+        <a href="/logout" class="logout-btn">Odhlásiť sa</a>
+    </div>
+
+    <div class="card">
+        <h2>📅 Môj týždenný rozvrh</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 50px;">Hod.</th>
+                    <th>Pondelok</th>
+                    <th>Utorok</th>
+                    <th>Streda</th>
+                    <th>Štvrtok</th>
+                    <th>Piatok</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for slot in range(1, 8) %}
+                <tr>
+                    <td style="text-align: center; font-weight: bold; background: #f9f9f9;">{{ slot }}.</td>
+                    {% for day in range(1, 6) %}
+                    <td>
+                        {% for lesson in schedule %}
+                            {% if lesson[0]|int == day and lesson[1]|int == slot %}
+                                <div class="lesson-box">
+                                    <strong>{{ lesson[2] }}</strong>
+                                    <span class="teacher-info">{{ lesson[3] }} {{ lesson[4] }} {{ lesson[5] }}</span>
+                                    <small>📍 {{ lesson[6] }}</small>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>📚 Žiacka knižka (Moje známky)</h2>
+        {% if grades %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Predmet</th>
+                    <th style="text-align: center;">Známka</th>
+                    <th>Dátum zápisu</th>
+                    <th>Poznámka učiteľa</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for g in grades %}
+                <tr>
+                    <td><strong>{{ g[0] }}</strong></td>
+                    <td style="text-align: center;"><span class="grade-badge">{{ g[1] }}</span></td>
+                    <td>{{ g[2].strftime('%d.%m.%Y') }}</td>
+                    <td><small>{{ g[3] if g[3] else 'Bez poznámky' }}</small></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="text-align: center; padding: 20px; color: #666;">Zatiaľ nemáš zapísané žiadne známky. Makaj! 💪</p>
+        {% endif %}
+    </div>
+</div>
+
+</body>
+</html>

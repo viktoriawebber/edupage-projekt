@@ -1,0 +1,264 @@
+
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <title>EduPage - Učiteľský portál</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+
+        .user-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #343a40;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .logout-btn {
+            color: #ff4d4d;
+            text-decoration: none;
+            font-weight: bold;
+            border: 1px solid #ff4d4d;
+            padding: 8px 18px;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+        .logout-btn:hover { background: #ff4d4d; color: white; }
+
+        .filter-group { margin-bottom: 15px; display: flex; gap: 10px; }
+        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
+        th { background: #007bff; color: white; }
+        .btn { background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+
+        .btn-edit { background: #ffc107; color: black; padding: 5px 10px; font-size: 0.85em; }
+        .btn-edit:hover { background: #e0a800; }
+        .btn-delete { background: #dc3545; color: white; padding: 5px 10px; font-size: 0.85em; }
+        .btn-delete:hover { background: #c82333; }
+
+        .schedule-item {
+            background: #e7f3ff;
+            padding: 5px;
+            border-radius: 4px;
+            border-left: 3px solid #007bff;
+            font-size: 0.85em;
+            line-height: 1.2;
+        }
+
+        .history-table th { background: #6c757d; }
+        .actions-cell { display: flex; gap: 5px; }
+    </style>
+</head>
+<body>
+
+    <div class="user-header">
+        <div>
+            <span style="font-size: 1.3em;">Prihlásený učiteľ: <strong>{{ full_name }}</strong></span>
+            <br>
+            <small style="opacity: 0.8;">EduPage informačný systém</small>
+        </div>
+        <a href="/logout" class="logout-btn">Odhlásiť sa</a>
+    </div>
+
+    <div class="card">
+        <h2>📝 Zapísať známku</h2>
+        <form action="/add_grade" method="post" style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
+            <div>
+                <label>1. Predmet (a trieda):</label><br>
+                <select name="subject_id" id="subject_select" onchange="filterStudents()" required>
+                    <option value="" disabled selected>Vyberte predmet...</option>
+                    {% for p in subjects %}
+                    <option value="{{ p[0] }}" data-classid="{{ p[2] }}">{{ p[1] }} ({{ p[3] }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label>2. Študent:</label><br>
+                <select name="student_id" id="student_select" required disabled>
+                    <option value="" disabled selected>Najprv vyberte predmet...</option>
+                    {% for s in students %}
+                    <option value="{{ s[0] }}" data-classid="{{ s[5] }}">{{ s[1] }} {{ s[2] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label>3. Známka:</label><br>
+                <select name="grade" required>
+                    <option value="1">1</option><option value="2">2</option>
+                    <option value="3">3</option><option value="4">4</option><option value="5">5</option>
+                </select>
+            </div>
+
+            <div style="flex-grow: 1; min-width: 250px;">
+                <label>Komentár:</label><br>
+                <input type="text" name="comment" placeholder="napr. Písomka z dejín..." style="width: 100%;">
+            </div>
+
+            <button type="submit" class="btn">Uložiť známku</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h3>🔍 Posledné udelené známky (možnosť opravy a zmazania)</h3>
+        <table class="history-table" style="font-size: 0.9em;">
+            <thead>
+                <tr>
+                    <th>Dátum</th>
+                    <th>Študent</th>
+                    <th>Predmet</th>
+                    <th style="width: 80px;">Známka</th>
+                    <th>Poznámka</th>
+                    <th style="width: 150px;">Akcia</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for g in recent_grades %}
+                <tr>
+                    <td>{{ g[0].strftime('%d.%m.%Y %H:%M') if g[0] else '-' }}</td>
+                    <td><strong>{{ g[1] }} {{ g[2] }}</strong></td>
+                    <td>{{ g[3] }}</td>
+
+                    <form id="edit-form-{{ g[6] }}" action="/edit_grade/{{ g[6] }}" method="post" style="display: none;"></form>
+
+                    <td>
+                        <select name="new_grade" form="edit-form-{{ g[6] }}" style="padding: 2px; width: 100%;">
+                            <option value="1" {% if g[4]|int == 1 %}selected{% endif %}>1</option>
+                            <option value="2" {% if g[4]|int == 2 %}selected{% endif %}>2</option>
+                            <option value="3" {% if g[4]|int == 3 %}selected{% endif %}>3</option>
+                            <option value="4" {% if g[4]|int == 4 %}selected{% endif %}>4</option>
+                            <option value="5" {% if g[4]|int == 5 %}selected{% endif %}>5</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="text" name="new_comment" form="edit-form-{{ g[6] }}" value="{{ g[5] if g[5] else '' }}" style="width: 95%; padding: 2px;">
+                    </td>
+                    <td class="actions-cell">
+                        <button type="submit" form="edit-form-{{ g[6] }}" class="btn btn-edit">Upraviť</button>
+                        <form action="/delete_grade/{{ g[6] }}" method="post" onsubmit="return confirm('Naozaj chcete túto známku natrvalo odstrániť?');" style="display: inline;">
+                            <button type="submit" class="btn btn-delete">Odstrániť</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" style="text-align:center;">Zatiaľ ste v týchto predmetoch neudelili žiadne známky.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>📅 Môj rozvrh hodín</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 50px;">Hod.</th>
+                    <th>Pondelok</th>
+                    <th>Utorok</th>
+                    <th>Streda</th>
+                    <th>Štvrtok</th>
+                    <th>Piatok</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for slot in range(1, 9) %}
+                <tr>
+                    <td style="text-align: center;"><strong>{{ slot }}.</strong></td>
+                    {% for day in range(1, 6) %}
+                    <td>
+                        {% if schedule %}
+                            {% for item in schedule %}
+                                {% if item[0]|int == day and item[1]|int == slot %}
+                                    <div class="schedule-item">
+                                        <strong>{{ item[2] }}</strong><br>
+                                        <small>{{ item[3] }}</small>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>👥 Zoznam študentov</h2>
+        <div class="filter-group">
+            <input type="text" id="filterTrieda" onkeyup="filtrujTabulku()" placeholder="Filtrovať podľa triedy (napr. 4.A)">
+            <input type="text" id="filterMeno" onkeyup="filtrujTabulku()" placeholder="Hľadať meno...">
+        </div>
+        <table id="tabulkaStudentov">
+            <thead>
+                <tr><th>Meno a priezvisko</th><th>Trieda</th><th>Email</th></tr>
+            </thead>
+            <tbody>
+                {% for s in students %}
+                <tr>
+                    <td><strong>{{ s[1] }} {{ s[2] }}</strong></td>
+                    <td>{{ s[3] }}</td>
+                    <td>{{ s[4] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+    // Táto funkcia filtruje dropdown pri zápise známky
+    function filterStudents() {
+        const subjectSelect = document.getElementById('subject_select');
+        const studentSelect = document.getElementById('student_select');
+        const selectedOption = subjectSelect.options[subjectSelect.selectedIndex];
+        const classId = selectedOption.getAttribute('data-classid');
+
+        studentSelect.disabled = false;
+        studentSelect.innerHTML = '<option value="" disabled selected>Vyberte študenta...</option>';
+
+        // Skryté pôvodné dáta o študentoch sú v jinja loope,
+        // ale pre čistotu JavaScriptu môžeme prejsť všetky optiony v "neviditeľnom" zozname
+        // Tu je jednoduchší trik: prejdeme všetky možnosti a tie čo nesedia skryjeme
+
+        const allStudents = [
+            {% for s in students %}
+            { id: "{{ s[0] }}", name: "{{ s[1] }} {{ s[2] }}", classId: "{{ s[5] }}" },
+            {% endfor %}
+        ];
+
+        allStudents.forEach(student => {
+            if (student.classId === classId) {
+                let opt = document.createElement('option');
+                opt.value = student.id;
+                opt.innerHTML = student.name;
+                studentSelect.appendChild(opt);
+            }
+        });
+    }
+
+    // Táto funkcia filtruje veľkú tabuľku na spodku
+    function filtrujTabulku() {
+        let inputTrieda = document.getElementById("filterTrieda").value.toUpperCase();
+        let inputMeno = document.getElementById("filterMeno").value.toUpperCase();
+        let tr = document.getElementById("tabulkaStudentov").getElementsByTagName("tr");
+
+        for (let i = 1; i < tr.length; i++) {
+            let tdMeno = tr[i].getElementsByTagName("td")[0].textContent.toUpperCase();
+            let tdTrieda = tr[i].getElementsByTagName("td")[1].textContent.toUpperCase();
+            if (tdMeno.indexOf(inputMeno) > -1 && tdTrieda.indexOf(inputTrieda) > -1) {
+                tr[i].style.display = "";
+            } else {
+                tr[i].style.display = "none";
+            }
+        }
+    }
+    </script>
+</body>
+</html>
